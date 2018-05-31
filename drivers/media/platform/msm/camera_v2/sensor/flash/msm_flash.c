@@ -1,4 +1,5 @@
 /* Copyright (c) 2009-2017, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2018 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -947,6 +948,7 @@ static int32_t msm_flash_get_dt_data(struct device_node *of_node,
 	struct msm_flash_ctrl_t *fctrl)
 {
 	int32_t rc = 0;
+	int32_t flash_driver_type = -1;
 
 	CDBG("called\n");
 
@@ -962,9 +964,29 @@ static int32_t msm_flash_get_dt_data(struct device_node *of_node,
 		return rc;
 	}
 
-	CDBG("subdev id %d\n", fctrl->subdev_id);
 
 	fctrl->flash_driver_type = FLASH_DRIVER_DEFAULT;
+
+	/* Read the flash_driver_type */
+	rc = of_property_read_u32(of_node, "qcom,flash-type", &flash_driver_type);
+	if (rc < 0) {
+		pr_err("failed rc %d\n", rc);
+	}
+	switch(flash_driver_type) {
+		case 1:
+			fctrl->flash_driver_type = FLASH_DRIVER_PMIC;
+			break;
+		case 2:
+			fctrl->flash_driver_type = FLASH_DRIVER_I2C;
+			break;
+		case 3:
+			fctrl->flash_driver_type = FLASH_DRIVER_GPIO;
+			break;
+		default:
+			fctrl->flash_driver_type = FLASH_DRIVER_DEFAULT;
+			break;
+	}
+	pr_err("flash_driver_type %d", fctrl->flash_driver_type);
 
 	/* Read the CCI master. Use M0 if not available in the node */
 	rc = of_property_read_u32(of_node, "qcom,cci-master",
@@ -977,14 +999,6 @@ static int32_t msm_flash_get_dt_data(struct device_node *of_node,
 		rc = 0;
 	} else {
 		fctrl->flash_driver_type = FLASH_DRIVER_I2C;
-	}
-
-	/* Read the flash and torch source info from device tree node */
-	rc = msm_flash_get_pmic_source_info(of_node, fctrl);
-	if (rc < 0) {
-		pr_err("%s:%d msm_flash_get_pmic_source_info failed rc %d\n",
-			__func__, __LINE__, rc);
-		return rc;
 	}
 
 	/* Read the gpio information from device tree */
@@ -1001,6 +1015,13 @@ static int32_t msm_flash_get_dt_data(struct device_node *of_node,
 	CDBG("%s:%d fctrl->flash_driver_type = %d", __func__, __LINE__,
 		fctrl->flash_driver_type);
 
+	/* Read the flash and torch source info from device tree node */
+	rc = msm_flash_get_pmic_source_info(of_node, fctrl);
+	if (rc < 0) {
+		pr_err("%s:%d msm_flash_get_pmic_source_info failed rc %d\n",
+			__func__, __LINE__, rc);
+		return rc;
+	}
 	return rc;
 }
 
