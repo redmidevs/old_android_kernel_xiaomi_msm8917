@@ -87,8 +87,8 @@
 /{
 	mtp_batterydata: qcom,battery-data {
 		qcom,batt-id-range-pct = <15>;
-		#include "batterydata-sunwoda-3300mah-4400mv.dtsi"
-		#include "batterydata-coslight-3300mah-4400mv.dtsi"
+		#include "batterydata-itech-3000mah.dtsi"
+		#include "batterydata-ascent-3450mAh.dtsi"
 	};
 };
 
